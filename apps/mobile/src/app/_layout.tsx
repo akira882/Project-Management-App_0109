@@ -81,6 +81,13 @@ export default function RootLayout() {
               title: 'タスク詳細',
             }}
           />
+          <Stack.Screen
+            name="tasks/create"
+            options={{
+              title: '新規タスク',
+              presentation: 'modal',
+            }}
+          />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
