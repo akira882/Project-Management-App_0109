@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import Config from '@/config';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,9 +31,10 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" />
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style="light" />
         <Stack
           screenOptions={{
             headerStyle: {
@@ -70,6 +72,13 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="projects/[id]/edit"
+            options={{
+              title: 'プロジェクト編集',
+              presentation: 'modal',
+            }}
+          />
+          <Stack.Screen
             name="tasks/index"
             options={{
               title: 'タスク一覧',
@@ -88,8 +97,16 @@ export default function RootLayout() {
               presentation: 'modal',
             }}
           />
+          <Stack.Screen
+            name="tasks/[id]/edit"
+            options={{
+              title: 'タスク編集',
+              presentation: 'modal',
+            }}
+          />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

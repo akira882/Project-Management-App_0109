@@ -1,67 +1,122 @@
-import { NextRequest } from 'next/server';
-import { successResponse, errorResponse, validationErrorResponse } from '@/lib/api-response';
-import { handleApiError } from '@/lib/error-handler';
+import { NextRequest, NextResponse } from 'next/server';
 import { GitHubService } from '@/lib/integrations/github';
-import { extractGitHubRepoInfo } from '@project-management/shared';
 
-// GET /api/integrations/github/issues - Get issues from a GitHub repository
+/**
+ * GET /api/integrations/github/issues?owner=xxx&repo=xxx
+ * GitHubのIssue一覧を取得
+ */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const repoUrl = searchParams.get('repoUrl');
-    const githubToken = request.headers.get('x-github-token');
+    const { searchParams } = new URL(request.url);
+    const owner = searchParams.get('owner');
+    const repo = searchParams.get('repo');
 
-    if (!githubToken) {
-      return errorResponse('GitHub access token required', 'MISSING_TOKEN', 401);
+    if (!owner || !repo) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'BAD_REQUEST',
+            message: 'owner and repo parameters are required',
+          },
+        },
+        { status: 400 }
+      );
     }
 
-    if (!repoUrl) {
-      return validationErrorResponse('Repository URL is required');
+    const token =
+      request.headers.get('x-github-token') || process.env.GITHUB_ACCESS_TOKEN;
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'GitHub access token is required',
+          },
+        },
+        { status: 401 }
+      );
     }
 
-    const repoInfo = extractGitHubRepoInfo(repoUrl);
-    if (!repoInfo) {
-      return validationErrorResponse('Invalid GitHub repository URL');
-    }
+    const githubService = new GitHubService(token);
+    const issues = await githubService.getIssues(owner, repo);
 
-    const githubService = new GitHubService(githubToken);
-    const issues = await githubService.getIssues(repoInfo.owner, repoInfo.repo);
-
-    return successResponse(issues);
+    return NextResponse.json({
+      data: issues,
+      message: 'Issues fetched successfully',
+    });
   } catch (error) {
-    return handleApiError(error);
+    console.error('GitHub API error:', error);
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error instanceof Error ? error.message : 'Failed to fetch issues',
+        },
+      },
+      { status: 500 }
+    );
   }
 }
 
-// POST /api/integrations/github/issues - Create a GitHub issue from a task
+/**
+ * POST /api/integrations/github/issues
+ * GitHub Issueを作成
+ */
 export async function POST(request: NextRequest) {
   try {
-    const githubToken = request.headers.get('x-github-token');
     const body = await request.json();
+    const { owner, repo, title, body: issueBody, labels, assignees } = body;
 
-    if (!githubToken) {
-      return errorResponse('GitHub access token required', 'MISSING_TOKEN', 401);
+    if (!owner || !repo || !title) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'BAD_REQUEST',
+            message: 'owner, repo, and title are required',
+          },
+        },
+        { status: 400 }
+      );
     }
 
-    const { repoUrl, title, description } = body;
+    const token =
+      request.headers.get('x-github-token') || process.env.GITHUB_ACCESS_TOKEN;
 
-    if (!repoUrl || !title) {
-      return validationErrorResponse('Repository URL and title are required');
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'GitHub access token is required',
+          },
+        },
+        { status: 401 }
+      );
     }
 
-    const repoInfo = extractGitHubRepoInfo(repoUrl);
-    if (!repoInfo) {
-      return validationErrorResponse('Invalid GitHub repository URL');
-    }
-
-    const githubService = new GitHubService(githubToken);
-    const issue = await githubService.createIssue(repoInfo.owner, repoInfo.repo, {
+    const githubService = new GitHubService(token);
+    const issue = await githubService.createIssue(owner, repo, {
       title,
-      body: description,
+      body: issueBody,
+      labels,
+      assignees,
     });
 
-    return successResponse(issue);
+    return NextResponse.json({
+      data: issue,
+      message: 'Issue created successfully',
+    });
   } catch (error) {
-    return handleApiError(error);
+    console.error('GitHub API error:', error);
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error instanceof Error ? error.message : 'Failed to create issue',
+        },
+      },
+      { status: 500 }
+    );
   }
 }

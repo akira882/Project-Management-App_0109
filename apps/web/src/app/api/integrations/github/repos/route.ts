@@ -1,23 +1,45 @@
-import { NextRequest } from 'next/server';
-import { successResponse, errorResponse } from '@/lib/api-response';
-import { handleApiError } from '@/lib/error-handler';
+import { NextRequest, NextResponse } from 'next/server';
 import { GitHubService } from '@/lib/integrations/github';
 
-// GET /api/integrations/github/repos - Get user's GitHub repositories
+/**
+ * GET /api/integrations/github/repos
+ * GitHubのリポジトリ一覧を取得
+ */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const githubToken = request.headers.get('x-github-token');
+    // アクセストークンを環境変数またはヘッダーから取得
+    const token =
+      request.headers.get('x-github-token') || process.env.GITHUB_ACCESS_TOKEN;
 
-    if (!githubToken) {
-      return errorResponse('GitHub access token required', 'MISSING_TOKEN', 401);
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'GitHub access token is required',
+          },
+        },
+        { status: 401 }
+      );
     }
 
-    const githubService = new GitHubService(githubToken);
+    const githubService = new GitHubService(token);
     const repos = await githubService.getRepos();
 
-    return successResponse(repos);
+    return NextResponse.json({
+      data: repos,
+      message: 'Repositories fetched successfully',
+    });
   } catch (error) {
-    return handleApiError(error);
+    console.error('GitHub API error:', error);
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error instanceof Error ? error.message : 'Failed to fetch repositories',
+        },
+      },
+      { status: 500 }
+    );
   }
 }
