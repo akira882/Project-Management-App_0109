@@ -16,14 +16,25 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.projectmanagement.app"
+      "bundleIdentifier": "com.projectmanagement.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "工事現場の写真撮影のためにカメラへのアクセスが必要です",
+        "NSPhotoLibraryUsageDescription": "写真を選択して案件に添付するためにフォトライブラリへのアクセスが必要です",
+        "NSPhotoLibraryAddUsageDescription": "撮影した写真を保存するためにフォトライブラリへのアクセスが必要です"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.projectmanagement.app"
+      "package": "com.projectmanagement.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
