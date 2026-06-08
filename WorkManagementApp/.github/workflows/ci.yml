@@ -1,0 +1,46 @@
+name: WorkManagementApp CI
+
+# WorkManagementApp/ 配下の変更で起動。
+on:
+  push:
+    paths:
+      - 'WorkManagementApp/**'
+  pull_request:
+    paths:
+      - 'WorkManagementApp/**'
+
+defaults:
+  run:
+    working-directory: WorkManagementApp
+
+jobs:
+  # Linux 上で実行可能な検証（型・lint・テスト・Web出力）
+  quality:
+    name: Lint / Type-check / Test / Web export
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: WorkManagementApp/package-lock.json
+      - name: Install dependencies
+        run: npm ci || npm install
+      - name: Type-check
+        run: npm run type-check
+      - name: Lint
+        run: npm run lint
+      - name: Unit & e2e (mocked) tests
+        run: npm test -- --ci
+      - name: Web export (Mac/Windows/ブラウザ向け出力の検証)
+        run: npm run export:web
+
+  # ネイティブビルドは macOS / Android SDK が必要なため CI では実行しない。
+  # 下記は手順の記録（実行は開発者の Mac / EAS クラウドで）。
+  native-build-note:
+    name: Native build (manual / Mac only)
+    runs-on: ubuntu-latest
+    if: false # 明示的に無効。eas build はローカル Mac もしくは EAS で実施。
+    steps:
+      - run: echo "iOS/Android ビルドは 'eas build' で実施。docs と README を参照。"

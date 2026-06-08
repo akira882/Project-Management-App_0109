@@ -1,0 +1,40 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug / logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# macOS
+.DS_Store
+
+# env / secrets — env.example のみ追跡する
+.env
+.env.local
+.env.*.local
+
+# test coverage
+coverage/
+
+# IDE
+.idea/
+.vscode/
