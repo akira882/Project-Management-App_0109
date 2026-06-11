@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { successResponse, validationErrorResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/error-handler';
+import { resolveUserId } from '@/lib/default-user';
 import { CreateProjectSchema, PaginationSchema } from '@project-management/shared';
 
 // GET /api/projects - Get all projects
@@ -81,8 +82,11 @@ export async function POST(request: NextRequest) {
       endDate: body.endDate ? new Date(body.endDate) : null,
     });
 
+    // No auth in v1: fall back to the shared default worker account
+    const userId = await resolveUserId(validatedData.userId);
+
     const project = await prisma.project.create({
-      data: validatedData,
+      data: { ...validatedData, userId },
       include: {
         user: {
           select: {

@@ -33,10 +33,14 @@ export const ProjectSchema = z.object({
   userId: z.string(),
 });
 
+// userId is optional on create: the API falls back to the default field
+// worker when no auth/user context is provided (no login in v1).
 export const CreateProjectSchema = ProjectSchema.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  userId: z.string().optional(),
 });
 
 export const UpdateProjectSchema = CreateProjectSchema.partial();
