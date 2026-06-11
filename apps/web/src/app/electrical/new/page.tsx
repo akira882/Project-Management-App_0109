@@ -65,7 +65,7 @@ export default function NewElectricalProject() {
         throw new Error('Failed to create project');
       }
 
-      const result = await response.json();
+      await response.json();
 
       // 成功したら一覧ページに戻る
       alert('案件を登録しました！');

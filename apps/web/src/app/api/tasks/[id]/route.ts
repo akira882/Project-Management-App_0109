@@ -6,7 +6,7 @@ import { UpdateTaskSchema } from '@project-management/shared';
 
 // GET /api/tasks/[id] - Get a task by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -87,7 +87,7 @@ export async function PATCH(
 
 // DELETE /api/tasks/[id] - Delete a task
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
