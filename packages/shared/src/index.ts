@@ -4,6 +4,7 @@ export * from './types/task';
 export * from './types/user';
 export * from './types/integration';
 export * from './types/api';
+export * from './types/attendance';
 
 // Utils
 export * from './utils/date';
