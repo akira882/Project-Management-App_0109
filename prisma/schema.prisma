@@ -1,5 +1,14 @@
 // Prisma Schema for Project Management App
 // Database: SQLite for development, PostgreSQL for production
+//
+// NOTE: SQLite does not support Prisma enums, so all enum-like fields are
+// stored as String. Allowed values are validated at the API layer with the
+// Zod schemas in @project-management/shared (single source of truth).
+//   UserRole:        USER | ADMIN | MANAGER
+//   ProjectStatus:   PLANNING | IN_PROGRESS | ON_HOLD | COMPLETED | ARCHIVED
+//   Priority:        LOW | MEDIUM | HIGH | URGENT
+//   TaskStatus:      TODO | IN_PROGRESS | IN_REVIEW | DONE | BLOCKED
+//   AttendanceStatus: WORKING | ON_BREAK | COMPLETED
 
 generator client {
   provider = "prisma-client-js"
@@ -16,15 +25,16 @@ model User {
   email     String   @unique
   name      String
   image     String?
-  role      UserRole @default(USER)
+  role      String   @default("USER")
 
   // External Integrations
   githubUsername String?
   slackUserId    String?
 
   // Relations
-  projects         Project[]
-  assignedTasks    Task[]           @relation("AssignedTasks")
+  projects          Project[]
+  assignedTasks     Task[]             @relation("AssignedTasks")
+  attendanceRecords AttendanceRecord[]
   githubIntegration GitHubIntegration?
   slackIntegration  SlackIntegration?
 
@@ -34,19 +44,13 @@ model User {
   @@index([email])
 }
 
-enum UserRole {
-  USER
-  ADMIN
-  MANAGER
-}
-
 // Project Model
 model Project {
-  id          String          @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String?
-  status      ProjectStatus   @default(PLANNING)
-  priority    ProjectPriority @default(MEDIUM)
+  status      String  @default("PLANNING")
+  priority    String  @default("MEDIUM")
 
   // Dates
   startDate   DateTime?
@@ -69,28 +73,13 @@ model Project {
   @@index([priority])
 }
 
-enum ProjectStatus {
-  PLANNING
-  IN_PROGRESS
-  ON_HOLD
-  COMPLETED
-  ARCHIVED
-}
-
-enum ProjectPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
 // Task Model
 model Task {
-  id          String       @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
   description String?
-  status      TaskStatus   @default(TODO)
-  priority    TaskPriority @default(MEDIUM)
+  status      String  @default("TODO")
+  priority    String  @default("MEDIUM")
 
   // Time tracking
   dueDate        DateTime?
@@ -120,19 +109,43 @@ model Task {
   @@index([priority])
 }
 
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  IN_REVIEW
-  DONE
-  BLOCKED
-}
+// Attendance Record Model (勤怠打刻)
+// One record per user per work day (JST). workDate is a "YYYY-MM-DD" string
+// computed in JST on the server so that early-morning punches never slip to
+// the previous day (classic UTC date-boundary bug).
+model AttendanceRecord {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+  // Work day in JST, e.g. "2026-06-11" (string keeps SQLite simple and sortable)
+  workDate String
+
+  // Punches
+  clockInAt    DateTime
+  clockOutAt   DateTime?
+  breakStartAt DateTime? // set while on break, cleared when break ends
+  breakMinutes Int       @default(0) // accumulated break time
+  workMinutes  Int? // computed server-side at clock-out: (out - in) - break
+
+  // WORKING | ON_BREAK | COMPLETED
+  status String @default("WORKING")
+
+  note String?
+
+  // Optional GPS evidence (reserved for future field verification)
+  clockInLat  Float?
+  clockInLng  Float?
+  clockOutLat Float?
+  clockOutLng Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, workDate])
+  @@index([userId])
+  @@index([workDate])
+  @@index([status])
 }
 
 // GitHub Integration Model
