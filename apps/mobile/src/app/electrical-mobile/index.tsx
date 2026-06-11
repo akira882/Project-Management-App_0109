@@ -65,6 +65,16 @@ export default function ElectricalDashboard() {
       {/* メインアクションボタン - 超大きく */}
       <View style={styles.actionsContainer}>
         <TouchableOpacity
+          style={[styles.actionButton, styles.actionButtonAttendance]}
+          onPress={() => router.push('/electrical-mobile/attendance')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.actionButtonEmoji}>⏰</Text>
+          <Text style={styles.actionButtonText}>勤怠打刻</Text>
+          <Text style={styles.actionButtonSubText}>出勤・退勤はこちら</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.actionButton, styles.actionButtonPrimary]}
           onPress={() => router.push('/electrical-mobile/new')}
           activeOpacity={0.7}
@@ -253,6 +263,15 @@ const styles = StyleSheet.create({
   },
   actionButtonSecondary: {
     backgroundColor: '#10B981',
+  },
+  actionButtonAttendance: {
+    backgroundColor: '#F59E0B',
+  },
+  actionButtonSubText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFFBEB',
+    marginTop: 8,
   },
   actionButtonEmoji: {
     fontSize: 64,

@@ -51,3 +51,33 @@ export const getDaysUntil = (date: Date | string): number => {
   const diffMs = d.getTime() - now.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 };
+
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/**
+ * Returns the JST calendar date as "YYYY-MM-DD" regardless of server timezone.
+ * Used as the attendance work-day key so early-morning punches never slip
+ * to the previous day (UTC date-boundary bug).
+ */
+export const getJstDateString = (date: Date = new Date()): string => {
+  return new Date(date.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
+};
+
+/**
+ * Returns the JST month as "YYYY-MM".
+ */
+export const getJstMonthString = (date: Date = new Date()): string => {
+  return getJstDateString(date).slice(0, 7);
+};
+
+/**
+ * Formats minutes as a Japanese duration, e.g. 485 -> "8時間5分".
+ */
+export const formatWorkDuration = (minutes: number): string => {
+  const m = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(m / 60);
+  const mins = m % 60;
+  if (hours === 0) return `${mins}分`;
+  if (mins === 0) return `${hours}時間`;
+  return `${hours}時間${mins}分`;
+};

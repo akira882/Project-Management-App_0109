@@ -90,8 +90,6 @@ export class GitHubService {
       status: string;
     }
   ): Promise<GitHubIssue> {
-    const issueState = task.status === 'DONE' ? 'closed' : 'open';
-
     return this.createIssue(owner, repo, {
       title: task.title,
       body: task.description || undefined,
