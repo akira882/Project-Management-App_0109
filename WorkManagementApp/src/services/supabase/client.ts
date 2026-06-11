@@ -44,13 +44,21 @@ export function getSupabase(): SupabaseClient {
 }
 
 /**
+ * 設定未投入（.env 未設定）でも import / ビルド（Web 出力）を失敗させないための
+ * プレースホルダ。createClient は空 URL で例外を投げるため、空時のみ既定値を使う。
+ * 実ネットワーク呼び出しの前に assertSupabaseConfig() で未設定を明示検出できる。
+ */
+const FALLBACK_SUPABASE_URL = 'http://localhost:54321';
+const FALLBACK_SUPABASE_ANON_KEY = 'public-anon-placeholder';
+
+/**
  * 利便性のためのシングルトンインスタンス。
  * module ロード時に createClient は呼ぶが assertSupabaseConfig() は呼ばない
  * （設定未投入でも import 自体は失敗させない方針。テストではこのモジュールごとモックされる）。
  */
 export const supabase: SupabaseClient = createClient(
-  Config.supabaseUrl,
-  Config.supabaseAnonKey,
+  Config.supabaseUrl || FALLBACK_SUPABASE_URL,
+  Config.supabaseAnonKey || FALLBACK_SUPABASE_ANON_KEY,
   {
     auth: {
       storage: authStorageAdapter,

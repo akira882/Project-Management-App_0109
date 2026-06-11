@@ -1,34 +1,25 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
+
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
- * エントリ画面（P0 最小版）。
- * P3 で認証状態に応じて (auth)/login または (tabs)/attendance へリダイレクトする実装に置き換える。
+ * エントリ画面。認証状態に応じて遷移先を振り分ける認証ゲート。
+ *
+ * - idle / loading … セッション復元中。ローディングを表示する。
+ * - authenticated … 打刻画面（(tabs)/attendance）へ。
+ * - unauthenticated … ログイン画面（(auth)/login）へ。
  */
-export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>勤怠管理アプリ</Text>
-      <Text style={styles.subtitle}>セットアップ中…</Text>
-    </View>
-  );
-}
+export default function Index(): JSX.Element {
+  const { status } = useAuth();
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    padding: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1E40AF',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#475569',
-  },
-});
+  if (status === 'idle' || status === 'loading') {
+    return <LoadingSpinner message="読み込み中…" />;
+  }
+
+  if (status === 'authenticated') {
+    return <Redirect href="/(tabs)/attendance" />;
+  }
+
+  return <Redirect href="/(auth)/login" />;
+}

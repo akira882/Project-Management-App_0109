@@ -24,7 +24,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   web: {
     bundler: 'metro',
-    output: 'static',
+    // 認証ゲート型のクライアント主体アプリのため SPA 出力。
+    // （静的プリレンダーはビルド時に各ルートを実行するため、本アプリでは 'single' が適切）
+    output: 'single',
     favicon: './assets/favicon.png',
   },
   plugins: ['expo-router', 'expo-secure-store'],
